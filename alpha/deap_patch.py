@@ -237,10 +237,11 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
     # for k, v in record.items():
     #     for i, n in enumerate(('train', 'vaild')):
     #         writer.add_scalar(f'{k}/{n}', v[i], ngen)
-    #
-    # logbook.record(gen=0, nevals=len(invalid_ind), **record)
-    # if verbose:
-    #     print(logbook.stream)
+    
+    # 确保logbook被正确初始化
+    logbook.record(gen=0, nevals=len(invalid_ind), **record)
+    if verbose:
+        print(logbook.stream)
 
     # Begin the generational process
     for gen in range(1, ngen + 1):
@@ -271,14 +272,9 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen,
         print(record)
 
         # Update the statistics with the new population
-        # record = stats.compile(population) if stats is not None else {}
-        # for k, v in record.items():
-        #     for i, n in enumerate(('train', 'vaild')):
-        #         writer.add_scalar(f'{k}/{n}', v[i], gen)
-        #
-        # logbook.record(gen=gen, nevals=len(invalid_ind), **record)
-        # if verbose:
-        #     print(logbook.stream)
+        logbook.record(gen=gen, nevals=len(invalid_ind), **record)
+        if verbose:
+            print(logbook.stream)
 
     #     # TODO 不知写的早停算法是否合适，用户可自行修改
     #     avg = logbook.select('avg')
