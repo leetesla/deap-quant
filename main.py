@@ -1,25 +1,22 @@
-from deap import base, creator, gp
-import numpy as np
 from alpha.deap_patch import *  # noqa
 # 创建一个新类 FitnessMax，参数weights:(1.0,)，就是最大化
 from alpha import *
 from datafeed.expr_functions import unary_funcs
 from datafeed import ts_rolling_funcs
 from alpha.init_pset import EXPR, dummy, _random_int_
+from deap import base, creator, tools
+import operator
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-# creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMax)
-
-from deap import base, creator, tools
 
 creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMax)
 
 toolbox = base.Toolbox()
 
-# pset = get_pset()
+# pset = get_pset() #Replaced
 pset = gp.PrimitiveSetTyped("MAIN", [], EXPR)
 
-# pset = add_operators_base(pset)
+# pset = add_operators_base(pset) #Replaced
 """基础算子"""
 # 无法给一个算子定义多种类型，只好定义多个不同名算子，之后通过helper.py中的convert_inverse_prim修正
 pset.addPrimitive(dummy, [EXPR, EXPR], EXPR, name='fadd')
@@ -40,13 +37,12 @@ for func in unary_funcs:
 for func in ts_rolling_funcs:
   pset.addPrimitive(dummy, [EXPR, int], EXPR, name=func)
 
-# add_period_ops(pset)
-# add_binary_ops(pset)
-# add_binary_rolling_ops(pset)
+# add_period_ops(pset) #Replaced
+# add_binary_ops(pset) #Replaced
+# add_binary_rolling_ops(pset) #Replaced
 
 
 pset.addEphemeralConstant('_random_int_', _random_int_, int)
-
 pset.addTerminal(1, EXPR, name='open')
 pset.addTerminal(1, EXPR, name='high')
 pset.addTerminal(1, EXPR, name='low')
@@ -68,16 +64,18 @@ toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
 
 toolbox.register('map', backtester)
 
-import operator
+
 
 toolbox.decorate("mate", gp.staticLimit(key=operator.attrgetter("height"), max_value=17))
 toolbox.decorate("mutate", gp.staticLimit(key=operator.attrgetter("height"), max_value=17))
 
 # 这里定义初始化的因子数，可以得行修改
 print('开始生成因子...')
-pop = toolbox.population(10)
+# 使用与mu相同的种群大小
+# pop = toolbox.population(10)
+pop = toolbox.population(n=150)  # type: ignore
 for p in pop:
-  print(stringify_for_sympy(p))
+    print(stringify_for_sympy(p))
 
 hof = tools.HallOfFame(10)
 # 只统计一个指标更清晰
@@ -105,10 +103,10 @@ print(logbook)
 print('=' * 60)
 
 
-def print_population(population):
-  for p in population:
-    expr = stringify_for_sympy(p)
-    print(expr, p.fitness)
+def print_population(ppl):
+  for _p in ppl:
+    expr = stringify_for_sympy(_p)
+    print(expr, _p.fitness)
 
 
 print_population(hof)

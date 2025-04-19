@@ -32,10 +32,11 @@ def list_funcs(mod):
 
 
 from datafeed.expr_ts import *
-from datafeed.expr_unary import *
+from datafeed.expr_functions.expr_unary import *
+from datafeed.expr_functions import expr_unary
 from datafeed.expr_talib import *
-from datafeed.expr_not_use_in_ga import *
-from datafeed import expr_ts, expr_unary, expr_talib
+from datafeed.expr_functions.expr_not_use_in_ga import *
+from datafeed import expr_ts, expr_talib
 
 ts_rolling_funcs = list_funcs(expr_ts)
 unary_funcs = list_funcs(expr_unary)

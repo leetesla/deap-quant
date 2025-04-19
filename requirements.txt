@@ -1,0 +1,7 @@
+deap
+numpy
+loguru
+pandas
+TA-Lib
+tensorboardX
+bt
