@@ -8,6 +8,9 @@ from deap import base, creator, tools
 import operator
 import pandas as pd
 import os
+# 添加数据库相关导入
+import sqlite3
+import numpy as np
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
@@ -57,7 +60,74 @@ toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.ex
 # print(toolbox.individual())
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-toolbox.register("evaluate", print)  # 、，在map中一并做了
+# 读取数据库中的ROA数据
+def load_roa_data(db_path='data.sqlite'):
+    """
+    从SQLite数据库中读取多个SECURITY_CODE的ROA字段数据
+    """
+    try:
+        conn = sqlite3.connect(db_path)
+        # 假设表名为financial_data，包含SECURITY_CODE, ROA, REPORT_PERIOD等字段
+        query = """
+        SELECT SECURITY_CODE, ROA, REPORT_DATE
+        FROM financial_data
+        ORDER BY SECURITY_CODE, REPORT_DATE
+        """
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+
+        # 将数据转换为字典格式，每个SECURITY_CODE对应一个ROA序列
+        roa_data = {}
+        for code in df['SECURITY_CODE'].unique():
+            roa_series = df[df['SECURITY_CODE'] == code]['ROA'].values
+            roa_data[code] = roa_series
+
+        print(f"成功加载{len(roa_data)}个证券的ROA数据")
+        return roa_data
+    except Exception as e:
+        print(f"读取数据库时出错: {e}")
+        return {}
+
+# 加载ROA数据
+roa_data = load_roa_data(db_path='financedata/stocks_financial_data.db')
+
+# 修改evaluate函数，使用ROA数据进行评估
+def evaluate_individual(individual):
+    """
+    评估个体的适应度，基于ROA数据计算因子有效性
+    """
+    try:
+        # 将个体转换为表达式字符串
+        expr_str = stringify_for_sympy(individual)
+
+        # 这里应该根据表达式计算因子值，然后与ROA数据进行相关性分析
+        # 由于缺少具体的因子计算逻辑，这里提供一个示例框架
+
+        # 示例：计算因子与ROA的相关性作为适应度
+        correlations = []
+        for security_code, roa_values in roa_data.items():
+            # 这里需要根据expr_str计算因子值
+            # 由于缺少具体实现，我们使用随机数作为示例
+            factor_values = np.random.randn(len(roa_values))  # 示例数据
+
+            # 计算因子值与ROA的相关性
+            if len(roa_values) > 1 and len(factor_values) == len(roa_values):
+                corr = np.corrcoef(factor_values, roa_values)[0, 1]
+                if not np.isnan(corr):
+                    correlations.append(abs(corr))  # 使用绝对值作为适应度
+
+        # 计算平均相关性作为适应度
+        if correlations:
+            fitness = np.mean(correlations)
+        else:
+            fitness = 0.0
+
+        return (fitness,)
+    except Exception as e:
+        print(f"评估个体时出错: {e}")
+        return (0.0,)
+
+toolbox.register("evaluate", evaluate_individual)  # 修改评估函数
 
 toolbox.register("select", tools.selTournament, tournsize=3)  # 目标优化
 # toolbox.register("select", tools.selNSGA2)  # 多目标优化 FITNESS_WEIGHTS = (1.0, 1.0)
@@ -65,9 +135,7 @@ toolbox.register("mate", gp.cxOnePoint)
 toolbox.register("expr_mut", gp.genFull, min_=0, max_=2)
 toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
 
-toolbox.register('map', backtester)
-
-
+# toolbox.register('map', backtester)  # 删除原来的backtester
 
 toolbox.decorate("mate", gp.staticLimit(key=operator.attrgetter("height"), max_value=17))
 toolbox.decorate("mutate", gp.staticLimit(key=operator.attrgetter("height"), max_value=17))
@@ -78,8 +146,7 @@ print('开始生成因子...')
 # pop = toolbox.population(10)
 pop = toolbox.population(n=150)  # type: ignore
 for p in pop:
-    pp = stringify_for_sympy(p)
-    # print(pp)
+    print(stringify_for_sympy(p))
 
 hof = tools.HallOfFame(10)
 # 只统计一个指标更清晰

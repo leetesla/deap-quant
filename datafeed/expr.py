@@ -18,6 +18,7 @@ def calc_expr(df: pd.DataFrame, expr: str):  # correlation(rank(open),rank(volum
         return df[expr]
     print(expr)
     expr = expr_transform(df, expr)
+    print('+++++++ expr after expr_transform: +++++++', expr)
     se = eval(expr)
     return se
     # try:

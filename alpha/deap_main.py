@@ -62,9 +62,9 @@ population, logbook = eaMuPlusLambda(pop, toolbox,
                                      # 早停
                                      early_stopping_rounds=5)
 
-print(logbook)
+# print(logbook)
 
-print('=' * 60)
+# print('=' * 60)
 
 
 def print_population(population):
