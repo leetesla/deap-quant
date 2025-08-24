@@ -6,3 +6,5 @@ alpha/__pycache__/
 .LSOverride
 __pycache__/
 *.csv
+env/
+*/__pycache__/

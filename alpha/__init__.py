@@ -75,13 +75,25 @@ def filter_expr(expr_str, terminal=""):
   expr_add_replaced_to = terminal
   expr_sub_replaced_to = 0
   expr_div_replaced_to = 1
-  
+
   # 替换表达式内容
   expr_str = expr_str.replace(expr_add, str(expr_add_replaced_to))
-  expr_str = expr_str.replace(expr_sub, str(expr_sub_replaced_to))
-  expr_str = expr_str.replace(expr_div, str(expr_div_replaced_to))
-  
+
+  # 如果expr_str含有expr_sub或expr_div，直接return None
+  if expr_sub in expr_str or expr_div in expr_str:
+    return None
+    
+  # expr_str = expr_str.replace(expr_sub, str(expr_sub_replaced_to))
+  # expr_str = expr_str.replace(expr_div, str(expr_div_replaced_to))
+
   return expr_str
+
+def stringify_for_sympy_with_filter(f, terminal=""):
+  """Return the expression in a human readable string.
+  """
+  string = stringify_for_sympy(f)
+  string = filter_expr(string, terminal)
+  return string
 
 
 def _calc_df(inds):

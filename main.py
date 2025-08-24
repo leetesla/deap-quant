@@ -14,7 +14,7 @@ creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMax)
 
 toolbox = base.Toolbox()
-
+terminal = 'open'
 # pset = get_pset() #Replaced
 pset = gp.PrimitiveSetTyped("MAIN", [], EXPR)
 
@@ -45,7 +45,7 @@ for func in ts_rolling_funcs:
 
 
 pset.addEphemeralConstant('_random_int_', _random_int_, int)
-pset.addTerminal(1, EXPR, name='open')
+pset.addTerminal(1, EXPR, name=terminal)
 # pset.addTerminal(1, EXPR, name='high')
 # pset.addTerminal(1, EXPR, name='low')
 # pset.addTerminal(1, EXPR, name='close')
@@ -78,7 +78,7 @@ print('开始生成因子...')
 # pop = toolbox.population(10)
 pop = toolbox.population(n=150)  # type: ignore
 for p in pop:
-    pp = stringify_for_sympy(p)
+    pp = stringify_for_sympy_with_filter(p, terminal)
     print(pp)
 
 hof = tools.HallOfFame(10)
@@ -116,7 +116,7 @@ except Exception as e:
     # 检查个体是否有适应度值
     for ind in population:
         if not hasattr(ind, 'fitness') or ind.fitness is None:
-            print(f"Individual without fitness: {stringify_for_sympy(ind)}")
+            print(f"Individual without fitness: {stringify_for_sympy_with_filter(ind, terminal)}")
 
 print('=' * 60)
 
@@ -127,7 +127,7 @@ print('*' * 60)
 print("print_population():\n")
 def print_population(ppl):
   for _p in ppl:
-    expr = stringify_for_sympy(_p)
+    expr = stringify_for_sympy_with_filter(_p, terminal)
     print(expr, _p.fitness)
 
 
@@ -140,7 +140,7 @@ print('-' * 40)
 # 添加打印所有生成的表达式到CSV的功能
 all_expressions = []
 for i, ind in enumerate(pop):
-    expr = stringify_for_sympy(ind)
+    expr = stringify_for_sympy_with_filter(ind, terminal)
     print(f"{i+1:3d}: {expr}")
     # 收集所有表达式用于保存到CSV
     all_expressions.append({
@@ -166,7 +166,7 @@ if all_expressions:
 # 创建一个DataFrame来存储结果
 results = []
 for ind in hof:
-    expr = stringify_for_sympy(ind)
+    expr = stringify_for_sympy_with_filter(ind, terminal)
     # 确保个体有有效的适应度值
     if hasattr(ind, 'fitness') and ind.fitness is not None and len(ind.fitness.values) > 0:
         fitness = ind.fitness.values[0]
