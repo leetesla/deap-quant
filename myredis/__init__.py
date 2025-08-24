@@ -1,8 +1,8 @@
 from redis import asyncio as aioredis
 from redis import Redis
 
-from iconfig.config import REDIS_HOST, REDIS_PASSWORD
-from iredis.redis_key import KEY_ALPHA_EXPR_ALL
+from myconfig import REDIS_HOST, REDIS_PASSWORD
+from myredis.redis_key import KEY_ALPHA_EXPR_ALL
 
 redis_client=None
 
