@@ -1,5 +1,5 @@
 from redis import asyncio as aioredis
-
+from redis import Redis
 from myconfig import REDIS_PASSWORD, REDIS_HOST
 
 
@@ -33,6 +33,25 @@ async def create_redis_client(force = False):
   #   print("++++++++++++++++++++++++ redis_client not None ++++++++++++++++++++++++ ")
   return redis_client
 
+
+
+def create_sync_redis_client(db=0):
+    """
+    创建并返回一个同步的 Redis 连接实例。
+
+    :param host: Redis 服务器地址，默认为配置中的地址
+    :param port: Redis 服务端口，默认为 6379
+    :param db: 数据库编号，默认为 0
+    :return: 返回一个同步的 Redis 连接对象
+    """
+    try:
+        client = Redis(host=REDIS_HOST, port=6379, password=REDIS_PASSWORD, db=db, decode_responses=True)
+        # 测试连接
+        client.ping()  # 如果连接失败会抛出异常
+        return client
+    except Exception as e:
+        print(f"连接 Redis 失败: {e}")
+        return None
 async def add_elements_to_set(client, set_key, elements):
   """
   将一组元素添加到 Redis 中指定的集合里。

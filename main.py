@@ -9,6 +9,9 @@ import operator
 import pandas as pd
 import os
 
+from myredis.myredis import create_sync_redis_client
+from myredis.redis_key import KEY_ALPHA_EXPR_ALL
+
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
 creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMax)
@@ -133,10 +136,12 @@ def print_population(ppl):
 
 print_population(hof)
 print('+' * 60)
+redis_client = create_sync_redis_client()
 
 # 添加打印所有生成的表达式
 print("All generated expressions:")
 print('-' * 40)
+
 # 添加打印所有生成的表达式到CSV的功能
 all_expressions = []
 for i, ind in enumerate(pop):
@@ -145,8 +150,13 @@ for i, ind in enumerate(pop):
     # 收集所有表达式用于保存到CSV
     # 修改去重逻辑，只根据expression去重
     if expr is not None:
+        # 使用Redis进行去重，key为KEY_ALPHA_EXPR_ALL
+        redis_key = KEY_ALPHA_EXPR_ALL
+        redis_set_key = f"{redis_key}:set"
         # 检查是否已存在相同表达式
-        if not any(item['expression'] == expr for item in all_expressions):
+        if not redis_client.sismember(redis_set_key, expr):
+            redis_client.sadd(redis_set_key, expr)
+            redis_client.lpush(redis_key, expr)
             all_expressions.append({
                 'index': i+1,
                 'expression': expr
@@ -155,6 +165,7 @@ for i, ind in enumerate(pop):
             print(f'*** expr "{expr}" already exists, skipped to save to csv ***')
     else:
       print('*** expr is None, skipped to save to csv ***')
+
 
 # 保存所有生成的表达式到CSV文件
 if all_expressions:
