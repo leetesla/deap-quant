@@ -1,7 +1,8 @@
 from redis import asyncio as aioredis
 from redis import Redis
-from myconfig import REDIS_PASSWORD, REDIS_HOST
 
+from iconfig.config import REDIS_HOST, REDIS_PASSWORD
+from iredis.redis_key import KEY_ALPHA_EXPR_ALL
 
 redis_client=None
 
@@ -102,3 +103,9 @@ async def check_duplicate_alpha_expr(client, set_key, element):
     print("Redis 连接无效")
     return False
   return await client.sismember(set_key, element)
+
+
+if __name__ == '__main__':
+  c = create_sync_redis_client()
+  print(c.llen(KEY_ALPHA_EXPR_ALL))
+  c.close()

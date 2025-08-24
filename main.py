@@ -9,8 +9,8 @@ import operator
 import pandas as pd
 import os
 
-from myredis.myredis import create_sync_redis_client
-from myredis.redis_key import KEY_ALPHA_EXPR_ALL
+from iredis.redis_key import KEY_ALPHA_EXPR_ALL
+from myredis import create_sync_redis_client
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
@@ -151,8 +151,8 @@ for i, ind in enumerate(pop):
     # 修改去重逻辑，只根据expression去重
     if expr is not None:
         # 使用Redis进行去重，key为KEY_ALPHA_EXPR_ALL
-        redis_key = KEY_ALPHA_EXPR_ALL
-        redis_set_key = f"{redis_key}:set"
+        redis_key = f"{KEY_ALPHA_EXPR_ALL}:list"
+        redis_set_key = f"{KEY_ALPHA_EXPR_ALL}:set"
         # 检查是否已存在相同表达式
         if not redis_client.sismember(redis_set_key, expr):
             redis_client.sadd(redis_set_key, expr)
@@ -179,7 +179,7 @@ if all_expressions:
     # 保存到CSV文件
     all_output_file = os.path.join(output_dir, 'all_generated_expressions.csv')
     # 修改为追加模式，如果文件不存在则写入表头
-    df_all_expressions.to_csv(all_output_file, mode='a', index=False, 
+    df_all_expressions.to_csv(all_output_file, mode='a', index=False,
                               header=not os.path.exists(all_output_file))
     print(f"所有生成的表达式已保存到: {all_output_file}")
 
@@ -210,7 +210,7 @@ if results:  # 确保有结果可以保存
     # 保存到CSV文件
     output_file = os.path.join(output_dir, factor_results)
     # 修改为追加模式，如果文件不存在则写入表头
-    df_results.to_csv(output_file, mode='a', index=False, 
+    df_results.to_csv(output_file, mode='a', index=False,
                       header=not os.path.exists(output_file))
     print(f"结果已保存到: {output_file}")
 
