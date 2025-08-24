@@ -178,7 +178,9 @@ if all_expressions:
 
     # 保存到CSV文件
     all_output_file = os.path.join(output_dir, 'all_generated_expressions.csv')
-    df_all_expressions.to_csv(all_output_file, index=False)
+    # 修改为追加模式，如果文件不存在则写入表头
+    df_all_expressions.to_csv(all_output_file, mode='a', index=False, 
+                              header=not os.path.exists(all_output_file))
     print(f"所有生成的表达式已保存到: {all_output_file}")
 
 # 保存最终结果到CSV文件
@@ -207,7 +209,9 @@ if results:  # 确保有结果可以保存
 
     # 保存到CSV文件
     output_file = os.path.join(output_dir, factor_results)
-    df_results.to_csv(output_file, index=False)
+    # 修改为追加模式，如果文件不存在则写入表头
+    df_results.to_csv(output_file, mode='a', index=False, 
+                      header=not os.path.exists(output_file))
     print(f"结果已保存到: {output_file}")
 
     # 打印前10个最佳因子
