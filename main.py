@@ -143,10 +143,18 @@ for i, ind in enumerate(pop):
     expr = stringify_for_sympy_with_filter(ind, terminal)
     print(f"{i+1:3d}: {expr}")
     # 收集所有表达式用于保存到CSV
-    all_expressions.append({
-        'index': i+1,
-        'expression': expr
-    })
+    # 修改去重逻辑，只根据expression去重
+    if expr is not None:
+        # 检查是否已存在相同表达式
+        if not any(item['expression'] == expr for item in all_expressions):
+            all_expressions.append({
+                'index': i+1,
+                'expression': expr
+            })
+        else:
+            print(f'*** expr "{expr}" already exists, skipped to save to csv ***')
+    else:
+      print('*** expr is None, skipped to save to csv ***')
 
 # 保存所有生成的表达式到CSV文件
 if all_expressions:
@@ -176,6 +184,7 @@ for ind in hof:
         })
 
 # 转换为DataFrame并保存
+factor_results = 'factor_results.csv'
 if results:  # 确保有结果可以保存
     df_results = pd.DataFrame(results)
     df_results = df_results.sort_values('fitness', ascending=False)  # 按适应度降序排序
@@ -186,7 +195,7 @@ if results:  # 确保有结果可以保存
         os.makedirs(output_dir)
 
     # 保存到CSV文件
-    output_file = os.path.join(output_dir, 'factor_results.csv')
+    output_file = os.path.join(output_dir, factor_results)
     df_results.to_csv(output_file, index=False)
     print(f"结果已保存到: {output_file}")
 
@@ -194,4 +203,4 @@ if results:  # 确保有结果可以保存
     print("\n前10个最佳因子:")
     print(df_results.head(10))
 else:
-    print("没有找到有效的因子结果，无法保存。")
+    print(f"没有找到有效的因子结果，无内容保存到{factor_results}")
