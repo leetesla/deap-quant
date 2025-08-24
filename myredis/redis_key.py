@@ -1,4 +1,6 @@
 KEY_PREFIX ='deap'
 
 KEY_ALPHA_EXPR = KEY_PREFIX + ":" + "alpha_expr"
-KEY_ALPHA_EXPR_ALL = KEY_PREFIX + ":" + "alpha_expr_all"
+KEY_ALPHA_EXPR_ALL = f"{KEY_PREFIX}:alpha_expr_all"
+KEY_ALPHA_EXPR_ALL_LIST = f"{KEY_ALPHA_EXPR_ALL}:list"
+KEY_ALPHA_EXPR_ALL_SET = f"{KEY_ALPHA_EXPR_ALL}:set"

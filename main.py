@@ -9,8 +9,9 @@ import operator
 import pandas as pd
 import os
 
-from iredis.redis_key import KEY_ALPHA_EXPR_ALL
-from myredis import create_sync_redis_client
+
+from myredis import create_sync_redis_client, KEY_ALPHA_EXPR_ALL
+from myredis.redis_key import KEY_ALPHA_EXPR_ALL_LIST, KEY_ALPHA_EXPR_ALL_SET
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
@@ -151,12 +152,12 @@ for i, ind in enumerate(pop):
     # 修改去重逻辑，只根据expression去重
     if expr is not None:
         # 使用Redis进行去重，key为KEY_ALPHA_EXPR_ALL
-        redis_key = f"{KEY_ALPHA_EXPR_ALL}:list"
-        redis_set_key = f"{KEY_ALPHA_EXPR_ALL}:set"
+        redis_key_list = KEY_ALPHA_EXPR_ALL_LIST
+        redis_set_key = KEY_ALPHA_EXPR_ALL_SET
         # 检查是否已存在相同表达式
         if not redis_client.sismember(redis_set_key, expr):
             redis_client.sadd(redis_set_key, expr)
-            redis_client.lpush(redis_key, expr)
+            redis_client.lpush(redis_key_list, expr)
             all_expressions.append({
                 'index': i+1,
                 'expression': expr
