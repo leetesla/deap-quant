@@ -1,8 +1,16 @@
 import pandas as pd
 
-price_csv_path = 'fin-data/AAPL-1.csv'
-fundamental_csv_path = 'fin-data/AAPL-1基本面数据.csv'
-output_file = ''
+data_dir = 'fin-data'
+
+price_csv = 'AAPL-1.csv'
+
+fundamental_csv = price_csv.replace('.csv', '-f.csv')
+output_csv = price_csv.replace('.csv', '-merged.csv')
+
+price_csv_path = f'{data_dir}/{price_csv}'
+fundamental_csv_path = f'{data_dir}/{fundamental_csv}'
+output_csv_path = f'{data_dir}/merged/{output_csv}'
+
 # 读取量价数据
 price_df = pd.read_csv(price_csv_path, parse_dates=['date'])
 price_df.sort_values('date', inplace=True)
@@ -37,4 +45,4 @@ merged_df.rename(columns={'REPORT_DATE': 'last_financial_report_date'}, inplace=
 print(merged_df.head(10))
 
 # 保存合并后的数据
-merged_df.to_csv('fin-data/AAPL_merged.csv', index=False)
+merged_df.to_csv(output_csv, index=False)
