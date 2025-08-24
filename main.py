@@ -8,94 +8,96 @@ from deap import base, creator, tools
 import operator
 import pandas as pd
 import os
-
-
-from myredis import create_sync_redis_client, KEY_ALPHA_EXPR_ALL
+from myredis import create_sync_redis_client
 from myredis.redis_key import KEY_ALPHA_EXPR_ALL_LIST, KEY_ALPHA_EXPR_ALL_SET
+# 在文件顶部添加
+import signal
+import time
 
-creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+# 添加全局变量
+running = True
 
-creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMax)
+def run_evolution():
+  creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
-toolbox = base.Toolbox()
-terminal = 'open'
-# pset = get_pset() #Replaced
-pset = gp.PrimitiveSetTyped("MAIN", [], EXPR)
+  creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMax)
 
-# pset = add_operators_base(pset) #Replaced
-"""基础算子"""
-# 无法给一个算子定义多种类型，只好定义多个不同名算子，之后通过helper.py中的convert_inverse_prim修正
-pset.addPrimitive(dummy, [EXPR, EXPR], EXPR, name='fadd')
-pset.addPrimitive(dummy, [EXPR, EXPR], EXPR, name='fsub')
-pset.addPrimitive(dummy, [EXPR, EXPR], EXPR, name='fmul')
-pset.addPrimitive(dummy, [EXPR, EXPR], EXPR, name='fdiv')
+  toolbox = base.Toolbox()
+  terminal = 'open'
+  # pset = get_pset() #Replaced
+  pset = gp.PrimitiveSetTyped("MAIN", [], EXPR)
 
-# pset.addPrimitive(dummy, [EXPR, int], EXPR, name='iadd')
-# pset.addPrimitive(dummy, [EXPR, int], EXPR, name='isub')
-# pset.addPrimitive(dummy, [EXPR, int], EXPR, name='imul')
-# pset.addPrimitive(dummy, [EXPR, int], EXPR, name='idiv')
+  # pset = add_operators_base(pset) #Replaced
+  """基础算子"""
+  # 无法给一个算子定义多种类型，只好定义多个不同名算子，之后通过helper.py中的convert_inverse_prim修正
+  pset.addPrimitive(dummy, [EXPR, EXPR], EXPR, name='fadd')
+  pset.addPrimitive(dummy, [EXPR, EXPR], EXPR, name='fsub')
+  pset.addPrimitive(dummy, [EXPR, EXPR], EXPR, name='fmul')
+  pset.addPrimitive(dummy, [EXPR, EXPR], EXPR, name='fdiv')
 
-# add_unary_ops(pset) 用下面的代码代替
-for func in unary_funcs:
-  pset.addPrimitive(dummy, [EXPR], EXPR, name=func)
+  # pset.addPrimitive(dummy, [EXPR, int], EXPR, name='iadd')
+  # pset.addPrimitive(dummy, [EXPR, int], EXPR, name='isub')
+  # pset.addPrimitive(dummy, [EXPR, int], EXPR, name='imul')
+  # pset.addPrimitive(dummy, [EXPR, int], EXPR, name='idiv')
 
-# add_unary_rolling_ops(pset) 用下面的代码代替
-for func in ts_rolling_funcs:
-  pset.addPrimitive(dummy, [EXPR, int], EXPR, name=func)
+  # add_unary_ops(pset) 用下面的代码代替
+  for func in unary_funcs:
+    pset.addPrimitive(dummy, [EXPR], EXPR, name=func)
 
-# add_period_ops(pset) #Replaced
-# add_binary_ops(pset) #Replaced
-# add_binary_rolling_ops(pset) #Replaced
+  # add_unary_rolling_ops(pset) 用下面的代码代替
+  for func in ts_rolling_funcs:
+    pset.addPrimitive(dummy, [EXPR, int], EXPR, name=func)
 
+  # add_period_ops(pset) #Replaced
+  # add_binary_ops(pset) #Replaced
+  # add_binary_rolling_ops(pset) #Replaced
 
-pset.addEphemeralConstant('_random_int_', _random_int_, int)
-pset.addTerminal(1, EXPR, name=terminal)
-# pset.addTerminal(1, EXPR, name='high')
-# pset.addTerminal(1, EXPR, name='low')
-# pset.addTerminal(1, EXPR, name='close')
-# pset.addTerminal(1, EXPR, name='volume')
+  pset.addEphemeralConstant('_random_int_', _random_int_, int)
+  pset.addTerminal(1, EXPR, name=terminal)
+  # pset.addTerminal(1, EXPR, name='high')
+  # pset.addTerminal(1, EXPR, name='low')
+  # pset.addTerminal(1, EXPR, name='close')
+  # pset.addTerminal(1, EXPR, name='volume')
 
-# toolbox.register("expr", gp.genHalfAndHalf, pset=pset, min_=1, max_=5)
-toolbox.register("expr", gp.genFull, pset=pset, min_=1, max_=5)
-toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr)
-# print(toolbox.individual())
-toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+  # toolbox.register("expr", gp.genHalfAndHalf, pset=pset, min_=1, max_=5)
+  toolbox.register("expr", gp.genFull, pset=pset, min_=1, max_=5)
+  toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr)
+  # print(toolbox.individual())
+  toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-toolbox.register("evaluate", print)  # 、，在map中一并做了
+  toolbox.register("evaluate", print)  # 、，在map中一并做了
 
-toolbox.register("select", tools.selTournament, tournsize=3)  # 目标优化
-# toolbox.register("select", tools.selNSGA2)  # 多目标优化 FITNESS_WEIGHTS = (1.0, 1.0)
-toolbox.register("mate", gp.cxOnePoint)
-toolbox.register("expr_mut", gp.genFull, min_=0, max_=2)
-toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
+  toolbox.register("select", tools.selTournament, tournsize=3)  # 目标优化
+  # toolbox.register("select", tools.selNSGA2)  # 多目标优化 FITNESS_WEIGHTS = (1.0, 1.0)
+  toolbox.register("mate", gp.cxOnePoint)
+  toolbox.register("expr_mut", gp.genFull, min_=0, max_=2)
+  toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
 
-toolbox.register('map', backtester)
+  toolbox.register('map', backtester)
 
+  toolbox.decorate("mate", gp.staticLimit(key=operator.attrgetter("height"), max_value=17))
+  toolbox.decorate("mutate", gp.staticLimit(key=operator.attrgetter("height"), max_value=17))
 
-
-toolbox.decorate("mate", gp.staticLimit(key=operator.attrgetter("height"), max_value=17))
-toolbox.decorate("mutate", gp.staticLimit(key=operator.attrgetter("height"), max_value=17))
-
-# 这里定义初始化的因子数，可以得行修改
-print('开始生成因子...')
-# 使用与mu相同的种群大小
-# pop = toolbox.population(10)
-pop = toolbox.population(n=150)  # type: ignore
-for p in pop:
+  # 这里定义初始化的因子数，可以得行修改
+  print('开始生成因子...')
+  # 使用与mu相同的种群大小
+  # pop = toolbox.population(10)
+  pop = toolbox.population(n=150)  # type: ignore
+  for p in pop:
     pp = stringify_for_sympy_with_filter(p, terminal)
     print(pp)
 
-hof = tools.HallOfFame(10)
-# 只统计一个指标更清晰
-stats = tools.Statistics(lambda ind: ind.fitness.values)
-# 打补丁后，名人堂可以用nan了，如果全nan会报警
-stats.register("avg", np.nanmean, axis=0)
-stats.register("std", np.nanstd, axis=0)
-stats.register("min", np.nanmin, axis=0)
-stats.register("max", np.nanmax, axis=0)
+  hof = tools.HallOfFame(10)
+  # 只统计一个指标更清晰
+  stats = tools.Statistics(lambda ind: ind.fitness.values)
+  # 打补丁后，名人堂可以用nan了，如果全nan会报警
+  stats.register("avg", np.nanmean, axis=0)
+  stats.register("std", np.nanstd, axis=0)
+  stats.register("min", np.nanmin, axis=0)
+  stats.register("max", np.nanmax, axis=0)
 
-# 使用修改版的eaMuPlusLambda
-try:
+  # 使用修改版的eaMuPlusLambda
+  try:
     population, logbook = eaMuPlusLambda(pop, toolbox,
                                          # 选多少个做为下一代，每次生成多少新个体
                                          mu=150, lambda_=100,
@@ -111,71 +113,70 @@ try:
     print('=' * 60)
     print("print logbook \n")
     if logbook and hasattr(logbook, 'select') and logbook.select:
-        print(logbook)
+      print(logbook)
     else:
-        print("Logbook is empty or not properly populated.")
+      print("Logbook is empty or not properly populated.")
     print('=' * 60)
-except Exception as e:
+  except Exception as e:
     print(f"Error during evolution: {e}")
     # 检查个体是否有适应度值
     for ind in population:
-        if not hasattr(ind, 'fitness') or ind.fitness is None:
-            print(f"Individual without fitness: {stringify_for_sympy_with_filter(ind, terminal)}")
+      if not hasattr(ind, 'fitness') or ind.fitness is None:
+        print(f"Individual without fitness: {stringify_for_sympy_with_filter(ind, terminal)}")
 
-print('=' * 60)
+  print('=' * 60)
 
-print("Hall of Fame:\n")
-print(hof)
-print('*' * 60)
+  print("Hall of Fame:\n")
+  print(hof)
+  print('*' * 60)
 
-print("print_population():\n")
-def print_population(ppl):
-  for _p in ppl:
-    expr = stringify_for_sympy_with_filter(_p, terminal)
-    print(expr, _p.fitness)
+  print("print_population():\n")
 
+  def print_population(ppl):
+    for _p in ppl:
+      expr = stringify_for_sympy_with_filter(_p, terminal)
+      print(expr, _p.fitness)
 
-print_population(hof)
-print('+' * 60)
-redis_client = create_sync_redis_client()
+  print_population(hof)
+  print('+' * 60)
+  redis_client = create_sync_redis_client()
 
-# 添加打印所有生成的表达式
-print("All generated expressions:")
-print('-' * 40)
+  # 添加打印所有生成的表达式
+  print("All generated expressions:")
+  print('-' * 40)
 
-# 添加打印所有生成的表达式到CSV的功能
-all_expressions = []
-for i, ind in enumerate(pop):
+  # 添加打印所有生成的表达式到CSV的功能
+  all_expressions = []
+  for i, ind in enumerate(pop):
     expr = stringify_for_sympy_with_filter(ind, terminal)
-    print(f"{i+1:3d}: {expr}")
+    print(f"{i + 1:3d}: {expr}")
     # 收集所有表达式用于保存到CSV
     # 修改去重逻辑，只根据expression去重
     if expr is not None:
-        # 使用Redis进行去重，key为KEY_ALPHA_EXPR_ALL
-        redis_key_list = KEY_ALPHA_EXPR_ALL_LIST
-        redis_set_key = KEY_ALPHA_EXPR_ALL_SET
-        # 检查是否已存在相同表达式
-        if not redis_client.sismember(redis_set_key, expr):
-            redis_client.sadd(redis_set_key, expr)
-            redis_client.lpush(redis_key_list, expr)
-            all_expressions.append({
-                'index': i+1,
-                'expression': expr
-            })
-        else:
-            print(f'*** expr "{expr}" already exists, skipped to save to csv ***')
+      # 使用Redis进行去重，key为KEY_ALPHA_EXPR_ALL
+      redis_key_list = KEY_ALPHA_EXPR_ALL_LIST
+      redis_set_key = KEY_ALPHA_EXPR_ALL_SET
+      # 检查是否已存在相同表达式
+      if not redis_client.sismember(redis_set_key, expr):
+        redis_client.sadd(redis_set_key, expr)
+        redis_client.lpush(redis_key_list, expr)
+        all_expressions.append({
+          'index': i + 1,
+          'expression': expr
+        })
+      else:
+        print(f'*** expr "{expr}" already exists, skipped to save to csv ***')
     else:
       print('*** expr is None, skipped to save to csv ***')
 
-
-# 保存所有生成的表达式到CSV文件
-if all_expressions:
+  # 保存所有生成的表达式到CSV文件
+  if all_expressions:
     df_all_expressions = pd.DataFrame(all_expressions)
 
     # 确保输出目录存在
     output_dir = 'results'
     if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+      os.makedirs(output_dir)
 
     # 保存到CSV文件
     all_output_file = os.path.join(output_dir, 'all_generated_expressions.csv')
@@ -184,29 +185,29 @@ if all_expressions:
                               header=not os.path.exists(all_output_file))
     print(f"所有生成的表达式已保存到: {all_output_file}")
 
-# 保存最终结果到CSV文件
-# 创建一个DataFrame来存储结果
-results = []
-for ind in hof:
+  # 保存最终结果到CSV文件
+  # 创建一个DataFrame来存储结果
+  results = []
+  for ind in hof:
     expr = stringify_for_sympy_with_filter(ind, terminal)
     # 确保个体有有效的适应度值
     if hasattr(ind, 'fitness') and ind.fitness is not None and len(ind.fitness.values) > 0:
-        fitness = ind.fitness.values[0]
-        results.append({
-            'expression': expr,
-            'fitness': fitness
-        })
+      fitness = ind.fitness.values[0]
+      results.append({
+        'expression': expr,
+        'fitness': fitness
+      })
 
-# 转换为DataFrame并保存
-factor_results = 'factor_results.csv'
-if results:  # 确保有结果可以保存
+  # 转换为DataFrame并保存
+  factor_results = 'factor_results.csv'
+  if results:  # 确保有结果可以保存
     df_results = pd.DataFrame(results)
     df_results = df_results.sort_values('fitness', ascending=False)  # 按适应度降序排序
 
     # 确保输出目录存在
     output_dir = 'results'
     if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+      os.makedirs(output_dir)
 
     # 保存到CSV文件
     output_file = os.path.join(output_dir, factor_results)
@@ -218,5 +219,39 @@ if results:  # 确保有结果可以保存
     # 打印前10个最佳因子
     print("\n前10个最佳因子:")
     print(df_results.head(10))
-else:
+  else:
     print(f"没有找到有效的因子结果，无内容保存到{factor_results}")
+
+def signal_handler(sig, frame):
+  global running
+  print('\n接收到退出信号，正在停止程序...')
+  running = False
+
+
+def main():
+  global running
+
+  # 注册信号处理器
+  signal.signal(signal.SIGINT, signal_handler)
+  signal.signal(signal.SIGTERM, signal_handler)
+
+  generation = 0
+  while running:
+    generation += 1
+    print(f"\n开始第 {generation} 轮进化...")
+
+    try:
+      run_evolution()
+    except Exception as e:
+      print(f"第 {generation} 轮进化出错: {e}")
+
+    # 可选：在每轮之间添加延迟
+    for i in range(10):  # 10秒延迟，可被信号中断
+      if not running:
+        break
+      time.sleep(1)
+
+  print("程序已正常退出")
+
+if __name__ == '__main__':
+  main()

@@ -15,7 +15,7 @@ def my_load_env():
   load_dotenv(env_file, override=True)
 
 my_load_env()
-print(os.getenv('REDIS_HOST'))
+# print(os.getenv('REDIS_HOST'))
 # API_BASE_URL = 'https://api.worldquantbrain.com'
 API_BASE_URL = os.getenv('API_BASE_URL')
 
