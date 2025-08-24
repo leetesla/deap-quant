@@ -79,7 +79,7 @@ print('开始生成因子...')
 pop = toolbox.population(n=150)  # type: ignore
 for p in pop:
     pp = stringify_for_sympy(p)
-    # print(pp)
+    print(pp)
 
 hof = tools.HallOfFame(10)
 # 只统计一个指标更清晰
