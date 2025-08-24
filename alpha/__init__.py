@@ -68,6 +68,7 @@ def _calc_df(inds):
     print(df)
 
     names, features = [], []
+    ein = enumerate(inds)
     for i, expr in enumerate(inds):
         names.append(f'GP_{i:04d}')
         features.append(stringify_for_sympy(expr))
