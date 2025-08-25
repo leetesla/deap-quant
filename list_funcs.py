@@ -1,11 +1,11 @@
 from datafeed.expr_functions import unary_funcs
 from datafeed import ts_rolling_funcs
 import pandas as pd
-# 读取CSV文件
-df_except = pd.read_csv('funcs-except.csv', header=None, names=['function'])
 
-# 导入in_funcs_except函数
-from funcs_except import in_funcs_except
+from funcs.funcs_except import CSV_PATH_FUNCS_ALL, CSV_PATH_FUNCS_EXCEPT, in_funcs_except
+
+# 读取CSV文件
+df_except = pd.read_csv(CSV_PATH_FUNCS_EXCEPT, header=None, names=['function'])
 
 for func in unary_funcs:
   print(func)
@@ -32,6 +32,6 @@ for func in ts_rolling_funcs:
     all_funcs.append(func)
 
 # 保存到funcs-all.csv
-with open('funcs-all.csv', 'w') as f:
+with open(CSV_PATH_FUNCS_ALL, 'w') as f:
   for func in all_funcs:
     f.write(func + '\n')

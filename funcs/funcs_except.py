@@ -1,7 +1,12 @@
 import pandas as pd
+
+CSV_PATH_FUNCS_EXCEPT = 'funcs/funcs-except.csv'
+CSV_PATH_FUNCS_ALL = 'funcs/funcs-all.csv'
+
+
 def get_funcs_except():
   # 读取CSV文件
-  df_except = pd.read_csv('funcs-except.csv', header=None, names=['function'])
+  df_except = pd.read_csv(CSV_PATH_FUNCS_EXCEPT, header=None, names=['function'])
   return df_except
 
 
