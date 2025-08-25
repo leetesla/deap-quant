@@ -8,8 +8,11 @@ from deap import base, creator, tools
 import operator
 import pandas as pd
 import os
+
+from funcs.funcs_except import in_funcs_except
 from myredis import create_sync_redis_client
-from myredis.redis_key import KEY_ALPHA_EXPR_ALL_LIST, KEY_ALPHA_EXPR_ALL_SET
+from myredis.redis_key import KEY_ALPHA_EXPR_ALL_LIST, KEY_ALPHA_EXPR_ALL_SET, KEY_ALPHA_RESULT_ALL_LIST, \
+  KEY_ALPHA_RESULT_ALL_SET
 # 在文件顶部添加
 import signal
 import time
@@ -23,7 +26,7 @@ def run_evolution():
   creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMax)
 
   toolbox = base.Toolbox()
-  terminal = 'open'
+  terminal = 'BASIC_EPS'
   # pset = get_pset() #Replaced
   pset = gp.PrimitiveSetTyped("MAIN", [], EXPR)
 
@@ -42,11 +45,13 @@ def run_evolution():
 
   # add_unary_ops(pset) 用下面的代码代替
   for func in unary_funcs:
-    pset.addPrimitive(dummy, [EXPR], EXPR, name=func)
+    if not in_funcs_except(func):
+      pset.addPrimitive(dummy, [EXPR], EXPR, name=func)
 
   # add_unary_rolling_ops(pset) 用下面的代码代替
   for func in ts_rolling_funcs:
-    pset.addPrimitive(dummy, [EXPR, int], EXPR, name=func)
+    if not in_funcs_except(func):
+      pset.addPrimitive(dummy, [EXPR, int], EXPR, name=func)
 
   # add_period_ops(pset) #Replaced
   # add_binary_ops(pset) #Replaced
@@ -193,10 +198,21 @@ def run_evolution():
     # 确保个体有有效的适应度值
     if hasattr(ind, 'fitness') and ind.fitness is not None and len(ind.fitness.values) > 0:
       fitness = ind.fitness.values[0]
-      results.append({
-        'expression': expr,
-        'fitness': fitness
-      })
+
+      redis_key_list = KEY_ALPHA_RESULT_ALL_LIST
+      redis_set_key = KEY_ALPHA_RESULT_ALL_SET
+
+      # 检查是否已存在相同表达式
+      if not redis_client.sismember(redis_set_key, expr):
+        redis_client.sadd(redis_set_key, expr)
+        redis_client.lpush(redis_key_list, expr)
+
+        results.append({
+          'expression': expr,
+          'fitness': fitness
+        })
+      else:
+        print(f'+++ [RESULTS] expr "{expr}" already exists, skipped to save to results +++')
 
   # 转换为DataFrame并保存
   factor_results = 'factor_results.csv'
