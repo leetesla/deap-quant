@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 def merge_price_and_fundamental_data(price_csv, data_dir = 'fin-data'):
   """
@@ -54,11 +55,32 @@ def merge_price_and_fundamental_data(price_csv, data_dir = 'fin-data'):
   merged_df.rename(columns={'REPORT_DATE': 'last_financial_report_date'}, inplace=True)
 
   # 查看合并结果
-  print(merged_df.head(10))
+  # print(merged_df.head(10))
 
   # 保存合并后的数据
   merged_df.to_csv(output_csv_path, index=False)
 
+def merge_to_merge(to_merge = 'to-merge.csv', data_dir = 'fin-data'):
+    # 读取待合并的股票代码列表
+    to_merge_df = pd.read_csv(f'{data_dir}/{to_merge}')
+
+    # 遍历每个股票代码
+    for symbol in to_merge_df['Symbol']:
+        # 构造量价数据文件路径
+        price_csv_file = f'{symbol}.csv'
+        price_csv_path = f'{data_dir}/pv/{price_csv_file}'
+
+        # 检查文件是否存在
+        if os.path.exists(price_csv_path):
+            print(f"找到文件 {price_csv_file}，开始合并数据...")
+            merge_price_and_fundamental_data(price_csv_file, data_dir)
+        else:
+            print(f"警告: 未找到文件 {price_csv_file} in '{data_dir}/pv/'，跳过处理。")
+
+
+def remove_invalid_data(data_merged_dir = 'fin-data/merged'):
+  pass
+
 
 if __name__ == '__main__':
-  merge_price_and_fundamental_data('AAPL.csv')
+  merge_to_merge()
