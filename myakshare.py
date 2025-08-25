@@ -45,55 +45,12 @@ def get_fnd_data(conn_, symbols_):
   # 将所有数据保存到数据库中
   try:
     # 先删除已存在的表，避免数据重复
-    conn_.execute('DROP TABLE IF EXISTS financial_data')
+    conn_.execute(f'DROP TABLE IF EXISTS {table_name}')
     # 保存新的数据
     all_stocks_data.to_sql(table_name, conn_, if_exists='replace', index=False)
-    print(f"所有股票数据已保存到数据库 {BASE_DIR}/{db_name}.db 中的 {table_name} 表")
+    # print(f"所有股票数据已保存到数据库 {BASE_DIR}/{db_name}.db 中的 {table_name} 表")
   except Exception as e:
     print(f"保存数据到数据库时出错: {e}")
-
-def get_code_by_symbol(symbol):
-  csv_path = f"{BASE_DIR}/{SYMBOL_MAP_FILE}"
-  # 读取CSV文件
-  df = pd.read_csv(csv_path)
-  # 根据symbol查找对应的symbol_code
-  result = df[df['symbol'] == symbol]
-  if not result.empty:
-    print(f"找到 {symbol} 对应的代码: {result.iloc[0]['symbol_code']}")
-    return result.iloc[0]['symbol_code']
-  else:
-    print(f"--- 未找到 {symbol} 对应的代码 ---")
-    return None
-
-def get_symbol_map(symbols, stock_us_spot_em_file):
-    # 读取stock_us_spot_em_file CSV文件
-    spot_df = pd.read_csv(f'{BASE_DIR}/spot/{stock_us_spot_em_file}')
-    output_file = SYMBOL_MAP_FILE
-
-    # 创建一个空的DataFrame来存储结果
-    result_data = pd.DataFrame()
-
-    # 遍历每个symbol
-    for symbol in symbols:
-        # 筛选出"代码"列中以symbol结尾的行
-        filtered_df = spot_df[spot_df['代码'].str.endswith(f".{symbol}", na=False)].copy()
-
-        # 如果找到了匹配的行
-        if not filtered_df.empty:
-            # 添加symbol列
-            filtered_df.loc[:, 'symbol'] = symbol
-            # 重命名"代码"列为symbol_code
-            filtered_df = filtered_df.rename(columns={'代码': 'symbol_code'})
-
-            # 合并到结果数据中
-            result_data = pd.concat([result_data, filtered_df[['symbol', 'symbol_code']]], ignore_index=True)
-        else:
-          print(f"***** {symbol}找不到对应的code *****")
-    # 保存到新的CSV文件
-    # os.makedirs(f'{BASE_DIR}/symbol_map', exist_ok=True)
-    result_data.to_csv(f'{BASE_DIR}/{output_file}', index=False)
-    print(f"符号映射已保存到 {BASE_DIR}/{output_file}")
-
 def get_pv_data(conn_, symbols_):
   db_name = 'pv'
   table_name = 'pv_data'
@@ -145,12 +102,55 @@ def get_pv_data(conn_, symbols_):
   # 将所有数据保存到数据库中
   try:
     # 先删除已存在的表，避免数据重复
-    conn_.execute('DROP TABLE IF EXISTS financial_data')
+    conn_.execute(f'DROP TABLE IF EXISTS {table_name}')
     # 保存新的数据
     all_stocks_data.to_sql(table_name, conn_, if_exists='replace', index=False)
-    print(f"所有股票数据已保存到数据库 {BASE_DIR}/{db_name}.db 中的 {table_name} 表")
+    # print(f"所有股票数据已保存到数据库 {BASE_DIR}/{db_name}.db 中的 {table_name} 表")
   except Exception as e:
     print(f"保存数据到数据库时出错: {e}")
+
+def get_code_by_symbol(symbol):
+  csv_path = f"{BASE_DIR}/{SYMBOL_MAP_FILE}"
+  # 读取CSV文件
+  df = pd.read_csv(csv_path)
+  # 根据symbol查找对应的symbol_code
+  result = df[df['symbol'] == symbol]
+  if not result.empty:
+    print(f"找到 {symbol} 对应的代码: {result.iloc[0]['symbol_code']}")
+    return result.iloc[0]['symbol_code']
+  else:
+    print(f"--- 未找到 {symbol} 对应的代码 ---")
+    return None
+
+def get_symbol_map(symbols, stock_us_spot_em_file):
+    # 读取stock_us_spot_em_file CSV文件
+    spot_df = pd.read_csv(f'{BASE_DIR}/spot/{stock_us_spot_em_file}')
+    output_file = SYMBOL_MAP_FILE
+
+    # 创建一个空的DataFrame来存储结果
+    result_data = pd.DataFrame()
+
+    # 遍历每个symbol
+    for symbol in symbols:
+        # 筛选出"代码"列中以symbol结尾的行
+        filtered_df = spot_df[spot_df['代码'].str.endswith(f".{symbol}", na=False)].copy()
+
+        # 如果找到了匹配的行
+        if not filtered_df.empty:
+            # 添加symbol列
+            filtered_df.loc[:, 'symbol'] = symbol
+            # 重命名"代码"列为symbol_code
+            filtered_df = filtered_df.rename(columns={'代码': 'symbol_code'})
+
+            # 合并到结果数据中
+            result_data = pd.concat([result_data, filtered_df[['symbol', 'symbol_code']]], ignore_index=True)
+        else:
+          print(f"***** {symbol}找不到对应的code *****")
+    # 保存到新的CSV文件
+    # os.makedirs(f'{BASE_DIR}/symbol_map', exist_ok=True)
+    result_data.to_csv(f'{BASE_DIR}/{output_file}', index=False)
+    print(f"符号映射已保存到 {BASE_DIR}/{output_file}")
+
 
 def get_stock_us_spot_em_df(file_name):
   # db_name = 'pv'
@@ -196,7 +196,7 @@ if __name__ == '__main__':
   #   get_code_by_symbol(symbol)
 
   # get_fnd_data(conn, symbols)
-  get_pv_data(conn, symbols)
+  # get_pv_data(conn, symbols)
 
   # 关闭数据库连接
   conn.close()
