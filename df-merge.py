@@ -78,9 +78,33 @@ def merge_to_merge(to_merge = 'to-merge.csv', data_dir = 'fin-data'):
             print(f"警告: 未找到文件 {price_csv_file} in '{data_dir}/pv/'，跳过处理。")
 
 
-def remove_invalid_data(data_merged_dir = 'fin-data/merged'):
-  pass
+def clean_data(data_dir ='fin-data'):
+  # 去掉data_merged_dir中前期last_financial_report_date为空的数据
+  data_merged_dir = f'{data_dir}/merged'
+  data_prepared_dir = f'{data_dir}/prepared'
+  # 遍历合并后的数据目录中的所有CSV文件
+  for filename in os.listdir(data_merged_dir):
+    if filename.endswith('.csv'):
+      file_path = os.path.join(data_merged_dir, filename)
+
+      # 读取CSV文件
+      df = pd.read_csv(file_path, parse_dates=['last_financial_report_date'])
+
+      # 找到第一个last_financial_report_date非空的索引
+      first_valid_index = df['last_financial_report_date'].first_valid_index()
+
+      # 如果存在非空值，则删除前面的数据
+      if first_valid_index is not None:
+        df_cleaned = df.iloc[first_valid_index:].copy()
+
+        # 保存清理后的数据到prepared目录
+        prepared_file_path = os.path.join(data_prepared_dir, filename)
+        df_cleaned.to_csv(prepared_file_path, index=False)
+        print(f"已清理文件 {filename}，删除了前 {first_valid_index} 行空数据")
+      else:
+        print(f"警告: 文件 {filename} 中所有last_financial_report_date都为空")
 
 
 if __name__ == '__main__':
   merge_to_merge()
+  clean_data()
