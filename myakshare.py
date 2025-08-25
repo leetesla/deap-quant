@@ -98,7 +98,7 @@ def get_pv_data(conn_, symbols_):
   except Exception as e:
     print(f"保存数据到数据库时出错: {e}")
 
-def get_name():
+def get_stock_us_spot_em_df(file_name):
   # db_name = 'pv'
   # table_name = 'pv_data'
   csv_dir = f'{BASE_DIR}/spot'
@@ -109,7 +109,7 @@ def get_name():
   print(stock_us_spot_em_df[:10])
 
   # 保存到CSV文件
-  stock_us_spot_em_df.to_csv(f'{csv_dir}/stock_us_spot_em.csv', index=False)
+  stock_us_spot_em_df.to_csv(f'{csv_dir}/{file_name}', index=False)
 
 if __name__ == '__main__':
   print(ak.__version__)
@@ -137,7 +137,9 @@ if __name__ == '__main__':
   spots = ["105.NVDA", "105.META", "", "", ""]
   # get_fnd_data(conn, symbols)
   # get_pv_data(conn, symbols)
-  # get_name()
+
+  stock_us_spot_em_file = "stock_us_spot_em.csv"
+  # get_stock_us_spot_em_df(stock_us_spot_em_file)
   get_symbol_map(symbols)
   # 关闭数据库连接
   conn.close()
