@@ -1,7 +1,9 @@
 import pandas as pd
 import os
 
-def merge_price_and_fundamental_data(price_csv, data_dir = 'fin-data'):
+BASE_DIR = 'fin-data'
+
+def merge_price_and_fundamental_data(price_csv, data_dir = BASE_DIR):
   """
   将量价数据和基本面数据进行合并，并保存合并后的数据到文件。
 
@@ -12,7 +14,7 @@ def merge_price_and_fundamental_data(price_csv, data_dir = 'fin-data'):
   返回:
   None
   """
-  # data_dir = 'fin-data'
+  # data_dir = BASE_DIR
   # price_csv = 'AAPL-1.csv'
 
   # fundamental_csv = price_csv.replace('.csv', '-f.csv')
@@ -60,7 +62,7 @@ def merge_price_and_fundamental_data(price_csv, data_dir = 'fin-data'):
   # 保存合并后的数据
   merged_df.to_csv(output_csv_path, index=False)
 
-def merge_to_merge(to_merge = 'to-merge.csv', data_dir = 'fin-data'):
+def merge_to_merge(to_merge = 'to-merge.csv', data_dir = BASE_DIR):
     # 读取待合并的股票代码列表
     to_merge_df = pd.read_csv(f'{data_dir}/{to_merge}')
 
@@ -78,7 +80,7 @@ def merge_to_merge(to_merge = 'to-merge.csv', data_dir = 'fin-data'):
             print(f"警告: 未找到文件 {price_csv_file} in '{data_dir}/pv/'，跳过处理。")
 
 
-def clean_data(data_dir ='fin-data'):
+def clean_data(data_dir = BASE_DIR):
   # 去掉data_merged_dir中前期last_financial_report_date为空的数据
   data_merged_dir = f'{data_dir}/merged'
   data_prepared_dir = f'{data_dir}/prepared'
