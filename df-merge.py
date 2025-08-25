@@ -79,7 +79,6 @@ def merge_to_merge(to_merge = 'to-merge.csv', data_dir = BASE_DIR):
         else:
             print(f"警告: 未找到文件 {price_csv_file} in '{data_dir}/pv/'，跳过处理。")
 
-
 def clean_data(data_dir = BASE_DIR):
   # 去掉data_merged_dir中前期last_financial_report_date为空的数据
   data_merged_dir = f'{data_dir}/merged'
