@@ -65,7 +65,7 @@ def run_evolution():
   # pset.addTerminal(1, EXPR, name='volume')
 
   # toolbox.register("expr", gp.genHalfAndHalf, pset=pset, min_=1, max_=5)
-  toolbox.register("expr", gp.genFull, pset=pset, min_=1, max_=5)
+  toolbox.register("expr", gp.genHalfAndHalf, pset=pset, min_=1, max_=5)
   toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr)
   # print(toolbox.individual())
   toolbox.register("population", tools.initRepeat, list, toolbox.individual)
